@@ -41,19 +41,24 @@ def computeTextureWeights(fin, sigma, sharpness):
 
     # return  W_h, W_v
     
-    dt0_v = np.vstack((np.diff(fin, n=1, axis=0), fin[0,:] - fin[-1,:]))
-    dt0_h = np.vstack((np.diff(fin, n=1, axis=1).conj().T, fin[:,0].conj().T - fin[:,-1].conj().T)).conj().T
+    try:
+        dt0_v = np.vstack((np.diff(fin, n=1, axis=0), fin[0,:] - fin[-1,:]))
+        dt0_h = np.vstack((np.diff(fin, n=1, axis=1).conj().T, fin[:,0].conj().T - fin[:,-1].conj().T)).conj().T
 
-    gauker_h = scipy.signal.convolve2d(dt0_h, np.ones((1, sigma)), mode='same')
-    gauker_v = scipy.signal.convolve2d(dt0_v, np.ones((sigma, 1)), mode='same')
+        gauker_h = scipy.signal.convolve2d(dt0_h, np.ones((1, sigma)), mode='same')
+        gauker_v = scipy.signal.convolve2d(dt0_v, np.ones((sigma, 1)), mode='same')
 
-    np.abs(gauker_h, out=gauker_h)
-    np.abs(gauker_v, out=gauker_v)
+        np.abs(gauker_h, out=gauker_h)
+        np.abs(gauker_v, out=gauker_v)
 
-    W_h = 1 / (gauker_h * np.abs(dt0_h) + sharpness)
-    W_v = 1 / (gauker_v * np.abs(dt0_v) + sharpness)
+        W_h = 1 / (gauker_h * np.abs(dt0_h) + sharpness)
+        W_v = 1 / (gauker_v * np.abs(dt0_v) + sharpness)
 
-    return W_h, W_v
+        return W_h, W_v
+    
+    except Exception as e:
+        print("Error in computeTextureWeights:", e)
+        return None, None
     
 def solveLinearEquation(IN, wx, wy, lamda):
     """
@@ -73,44 +78,47 @@ def solveLinearEquation(IN, wx, wy, lamda):
     Returns the smoothed image.
         
     """
-    [r, c] = IN.shape
-    k = r * c
-    
-    dx =  -lamda * wx.flatten('F')
-    dy =  -lamda * wy.flatten('F')
-    
-    tempx = np.roll(wx, 1, axis=1)
-    tempy = np.roll(wy, 1, axis=0)
-    
-    dxa = -lamda *tempx.flatten('F')
-    dya = -lamda *tempy.flatten('F')
-    
-    tmp = wx[:,-1]
-    tempx = np.concatenate((tmp[:,None], np.zeros((r,c-1))), axis=1)
-    tmp = wy[-1,:]
-    tempy = np.concatenate((tmp[None,:], np.zeros((r-1,c))), axis=0)
-    
-    dxd1 = -lamda * tempx.flatten('F')
-    dyd1 = -lamda * tempy.flatten('F')
-    
-    wx[:,-1] = 0
-    wy[-1,:] = 0
-    
-    dxd2 = -lamda * wx.flatten('F')
-    dyd2 = -lamda * wy.flatten('F')
-    
-    Ax = scipy.sparse.spdiags(np.concatenate((dxd1[:,None], dxd2[:,None]), axis=1).T, np.array([-k+r,-r]), k, k)
-    Ay = scipy.sparse.spdiags(np.concatenate((dyd1[None,:], dyd2[None,:]), axis=0), np.array([-r+1,-1]), k, k)
-    
-    D = 1 - ( dx + dy + dxa + dya)
-    A = ((Ax+Ay) + (Ax+Ay).conj().T + scipy.sparse.spdiags(D, 0, k, k)).T
-    
-    tin = IN[:,:]
-    tout = scipy.sparse.linalg.spsolve(A, tin.flatten('F'))
-    OUT = np.reshape(tout, (r, c), order='F')
-    
-    return OUT
-    
+    try:
+        [r, c] = IN.shape
+        k = r * c
+        
+        dx =  -lamda * wx.flatten('F')
+        dy =  -lamda * wy.flatten('F')
+        
+        tempx = np.roll(wx, 1, axis=1)
+        tempy = np.roll(wy, 1, axis=0)
+        
+        dxa = -lamda *tempx.flatten('F')
+        dya = -lamda *tempy.flatten('F')
+        
+        tmp = wx[:,-1]
+        tempx = np.concatenate((tmp[:,None], np.zeros((r,c-1))), axis=1)
+        tmp = wy[-1,:]
+        tempy = np.concatenate((tmp[None,:], np.zeros((r-1,c))), axis=0)
+        
+        dxd1 = -lamda * tempx.flatten('F')
+        dyd1 = -lamda * tempy.flatten('F')
+        
+        wx[:,-1] = 0
+        wy[-1,:] = 0
+        
+        dxd2 = -lamda * wx.flatten('F')
+        dyd2 = -lamda * wy.flatten('F')
+        
+        Ax = scipy.sparse.spdiags(np.concatenate((dxd1[:,None], dxd2[:,None]), axis=1).T, np.array([-k+r,-r]), k, k)
+        Ay = scipy.sparse.spdiags(np.concatenate((dyd1[None,:], dyd2[None,:]), axis=0), np.array([-r+1,-1]), k, k)
+        
+        D = 1 - ( dx + dy + dxa + dya)
+        A = ((Ax+Ay) + (Ax+Ay).conj().T + scipy.sparse.spdiags(D, 0, k, k)).T
+        
+        tin = IN[:,:]
+        tout = scipy.sparse.linalg.spsolve(A, tin.flatten('F'))
+        OUT = np.reshape(tout, (r, c), order='F')
+        
+        return OUT
+    except Exception as e:
+        print("Error in solveLinearEquation:", e)
+        return None
    
 
 def tsmooth(img, lamda=0.01, sigma=3.0, sharpness=0.001):
@@ -129,11 +137,16 @@ def tsmooth(img, lamda=0.01, sigma=3.0, sharpness=0.001):
     Calls 'solveLinearEquation' to obtain the smoothed image.
         
     """
-    I = cv2.normalize(img.astype('float64'), None, 0.0, 1.0, cv2.NORM_MINMAX)
-    x = np.copy(I)
-    wx, wy = computeTextureWeights(x, sigma, sharpness)
-    S = solveLinearEquation(I, wx, wy, lamda)
-    return S
+    try:
+        I = cv2.normalize(img.astype('float64'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+        x = np.copy(I)
+        wx, wy = computeTextureWeights(x, sigma, sharpness)
+        S = solveLinearEquation(I, wx, wy, lamda)
+        return S
+    
+    except Exception as e:
+        print("Error in tsmooth:", e)
+        return None
 
 def rgb2gm(I):
     """
@@ -148,11 +161,16 @@ def rgb2gm(I):
     It checks if the input image is RGB and then computes the grayscale image using the geometric mean formula.
     
     """
-    if (I.shape[2] == 3):
-        I = cv2.normalize(I.astype('float64'), None, 0.0, 1.0, cv2.NORM_MINMAX)
-        I = np.abs((I[:,:,0]*I[:,:,1]*I[:,:,2]))**(1/3)
+    try:
+        if (I.shape[2] == 3):
+            I = cv2.normalize(I.astype('float64'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+            I = np.abs((I[:,:,0]*I[:,:,1]*I[:,:,2]))**(1/3)
 
-    return I
+        return I
+    
+    except Exception as e:
+        print("Error in rgb2gm:", e)
+        return None
 
 def applyK(I, k, a=-0.3293, b=1.1258):
     """
@@ -168,11 +186,16 @@ def applyK(I, k, a=-0.3293, b=1.1258):
         Adjusted image.
     
     """
-    f = lambda x: np.exp((1-x**a)*b)
-    beta = f(k)
-    gamma = k**a
-    J = (I**gamma)*beta
-    return J
+    try:
+        f = lambda x: np.exp((1-x**a)*b)
+        beta = f(k)
+        gamma = k**a
+        J = (I**gamma)*beta
+        return J
+    
+    except Exception as e:
+        print("Error in applyK:", e)
+        return None
 
 def entropy(X):
     """
@@ -204,16 +227,21 @@ def entropy(X):
     # S = -np.sum(pk * np.log2(pk), axis=0)
     # return S
     
-    # Compute pixel counts
-    counts, _ = np.histogram(X, bins=256, range=(0, 1))
+    try:
+        # Compute pixel counts
+        counts, _ = np.histogram(X, bins=256, range=(0, 1))
 
-    # Normalize counts
-    pk = counts / np.sum(counts)
+        # Normalize counts
+        pk = counts / np.sum(counts)
 
-    # Calculate entropy
-    S = -np.sum(pk * np.log2(pk + 1e-10))  # Adding a small value to prevent log(0)
+        # Calculate entropy
+        S = -np.sum(pk * np.log2(pk + 1e-10))  # Adding a small value to prevent log(0)
 
-    return S
+        return S
+     
+    except Exception as e:
+        print("Error in entrophy:", e)
+        return None
 
 def maxEntropyEnhance(I, isBad, a=-0.3293, b=1.1258):
     """
@@ -260,45 +288,52 @@ def maxEntropyEnhance(I, isBad, a=-0.3293, b=1.1258):
     # # # Apply the exposure adjustment based on the optimized k
     # J = applyK(I, opt_k, a, b) - 0.01
     # return J
-    def entropy_neg(k):
-        """
-        Objective function to minimize: negative entropy.
-        
-        Parameters:
-            - k: Exposure ratio.
-
-        Returns:
-            Negative entropy value.
+    
+    try:
+        def entropy_neg(k):
+            """
+            Objective function to minimize: negative entropy.
             
-        This function calculates the negative entropy of the image after applying the exposure adjustment
-        with the given exposure ratio 'k'. It downscales the input image and selects valid pixels based on
-        the 'isBad' indicator. Then it computes the grayscale image and calculates the negative entropy.
-        The goal is to find the exposure ratio 'k' that maximizes the entropy of the image, enhancing its
-        information content and visual quality.
-        """
-        tmp = cv2.resize(I, (50, 50), interpolation=cv2.INTER_AREA)
-        tmp[tmp < 0] = 0
-        tmp = tmp.real
-        Y = rgb2gm(tmp)
+            Parameters:
+                - k: Exposure ratio.
 
-        isBadTmp = isBad * 1
-        isBadTmp = np.array(Image.fromarray(isBadTmp).resize((50, 50), Image.BICUBIC))
+            Returns:
+                Negative entropy value.
+                
+            This function calculates the negative entropy of the image after applying the exposure adjustment
+            with the given exposure ratio 'k'. It downscales the input image and selects valid pixels based on
+            the 'isBad' indicator. Then it computes the grayscale image and calculates the negative entropy.
+            The goal is to find the exposure ratio 'k' that maximizes the entropy of the image, enhancing its
+            information content and visual quality.
+            """
+            tmp = cv2.resize(I, (50, 50), interpolation=cv2.INTER_AREA)
+            tmp[tmp < 0] = 0
+            tmp = tmp.real
+            Y = rgb2gm(tmp)
 
-        isBadTmp[isBadTmp < 0.5] = 0
-        isBadTmp[isBadTmp >= 0.5] = 1
-        Y = Y[isBadTmp == 1]
+            isBadTmp = isBad * 1
+            isBadTmp = np.array(Image.fromarray(isBadTmp).resize((50, 50), Image.BICUBIC))
 
-        if Y.size == 0:
-            return np.inf  # Return positive infinity if no valid pixels
+            isBadTmp[isBadTmp < 0.5] = 0
+            isBadTmp[isBadTmp >= 0.5] = 1
+            Y = Y[isBadTmp == 1]
 
-        return -entropy(applyK(Y, k))
+            if Y.size == 0:
+                return np.inf  # Return positive infinity if no valid pixels
 
-    # Find the exposure ratio (k) that maximizes entropy
-    opt_res = scipy.optimize.minimize_scalar(entropy_neg, bounds=(1, 7), method='bounded')
+            return -entropy(applyK(Y, k))
 
-    # Apply the exposure adjustment based on the optimized k
-    J = applyK(I, opt_res.x, a, b) - 0.01
-    return J
+        # Find the exposure ratio (k) that maximizes entropy
+        opt_res = scipy.optimize.minimize_scalar(entropy_neg, bounds=(1, 7), method='bounded')
+
+        # Apply the exposure adjustment based on the optimized k
+        J = applyK(I, opt_res.x, a, b) - 0.01
+        return J
+    
+    except Exception as e:
+        print("Error in maxEntrophyEnhance:", e)
+        return None
+        
     
 
 def mds07_fusion(img, mu=0.5, a=-0.3293, b=1.1258):
@@ -319,40 +354,70 @@ def mds07_fusion(img, mu=0.5, a=-0.3293, b=1.1258):
     Returns:
         Processed image.    
     """
-    lamda = 0.5
-    sigma = 5
-    I = cv2.normalize(img.astype('float64'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+    try:
+        lamda = 0.5
+        sigma = 5
+        I = cv2.normalize(img.astype('float64'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 
-    # Weight matrix estimation
-    t_b = np.max(I, axis=2)
-    t_our = cv2.resize(tsmooth(np.array(Image.fromarray(t_b).resize((t_b.shape[1] // 2, t_b.shape[0] // 2), Image.BICUBIC)), lamda, sigma), (t_b.shape[1], t_b.shape[0]), interpolation=cv2.INTER_AREA)
+        # Weight matrix estimation
+        t_b = np.max(I, axis=2)
+        t_our = cv2.resize(tsmooth(np.array(Image.fromarray(t_b).resize((t_b.shape[1] // 2, t_b.shape[0] // 2), Image.BICUBIC)), lamda, sigma), (t_b.shape[1], t_b.shape[0]), interpolation=cv2.INTER_AREA)
+        
+        # Apply camera model with k(exposure ratio)
+        isBad = t_our < 0.5
+        J = maxEntropyEnhance(I, isBad)
+
+        # W: Weight Matrix
+        t = np.zeros((t_our.shape[0], t_our.shape[1], I.shape[2]))
+        for i in range(I.shape[2]):
+            t[:,:,i] = t_our
+        W = t**mu
+
+        # Apply fusion based on weights
+        I2 = I*W
+        J2 = J*(1-W)
+
+        result = I2 + J2
+        result = result * 255
+        result[result > 255] = 255
+        result[result<0] = 0
+        return result.astype(np.uint8)
     
-    # Apply camera model with k(exposure ratio)
-    isBad = t_our < 0.5
-    J = maxEntropyEnhance(I, isBad)
-
-    # W: Weight Matrix
-    t = np.zeros((t_our.shape[0], t_our.shape[1], I.shape[2]))
-    for i in range(I.shape[2]):
-        t[:,:,i] = t_our
-    W = t**mu
-
-    # Apply fusion based on weights
-    I2 = I*W
-    J2 = J*(1-W)
-
-    result = I2 + J2
-    result = result * 255
-    result[result > 255] = 255
-    result[result<0] = 0
-    return result.astype(np.uint8)
+    except Exception as e:
+        print("Error in mds07_fusion:", e)
+        return None
 
 def main():
-    img_name = sys.argv[1]
-    img = imageio.imread(img_name)
-    result = mds07_fusion(img)
-    plt.imshow(result)
-    plt.show()
+    try:
+        if len(sys.argv) < 2:
+            raise ValueError("Please provide the image file name as an argument.")
+        
+        img_name = sys.argv[1]
+        
+        try:
+            img = imageio.imread(img_name)
+        except FileNotFoundError:
+            print("Error: File not found.")
+            return
+        except Exception as e:
+            print("Error:", e)
+            return 
+
+        try:
+            result = mds07_fusion(img)
+        except Exception as e:
+            print("Error:", e)
+            return
+        
+        if result is not None:
+            plt.imshow(result)
+            plt.show()
+        
+        else:
+            print("Error occurred during image processing.")
+            
+    except Exception as e:
+        print("Error in main:", e)
 
 if __name__ == '__main__':
     main()
