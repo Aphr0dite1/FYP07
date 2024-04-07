@@ -291,7 +291,7 @@ def maxEntropyEnhance(I, isBad, a=-0.3293, b=1.1258):
         
     
 
-def mds07_fusion(img, mu=0.5, a=-0.3293, b=1.1258):
+def mds07_fusion(img, mu=0.5):
     """
     This function, MDS07, performs the main processing steps:
         - It initializes parameters such as lambda and sigma.
@@ -304,12 +304,13 @@ def mds07_fusion(img, mu=0.5, a=-0.3293, b=1.1258):
     
     Parameters:
         - img: Input image.
-        - mu, a, b: Parameters for the exposure fusion framework.
+        - mu: Parameters for the exposure fusion framework.
     
     Returns:
         Processed image.    
     """
     try:
+        
         lamda = 0.5
         sigma = 5
         I = cv2.normalize(img.astype('float64'), None, 0.0, 1.0, cv2.NORM_MINMAX)
