@@ -30,16 +30,6 @@ def computeTextureWeights(fin, sigma, sharpness):
     We use 'np.abs' in-place operations directly on the convolved gradients 'gauker_h' and 'gauker_v'. 
     This reduces memory overhead by avoiding unnecessary copying of arrays. 
     """
-    # dt0_v = np.vstack((np.diff(fin, n=1, axis=0), fin[0,:]-fin[-1,:]))
-    # dt0_h = np.vstack((np.diff(fin, n=1, axis=1).conj().T, fin[:,0].conj().T-fin[:,-1].conj().T)).conj().T
-
-    # gauker_h = scipy.signal.convolve2d(dt0_h, np.ones((1,sigma)), mode='same')
-    # gauker_v = scipy.signal.convolve2d(dt0_v, np.ones((sigma,1)), mode='same')
-
-    # W_h = 1/(np.abs(gauker_h)*np.abs(dt0_h)+sharpness)
-    # W_v = 1/(np.abs(gauker_v)*np.abs(dt0_v)+sharpness)
-
-    # return  W_h, W_v
     
     try:
         dt0_v = np.vstack((np.diff(fin, n=1, axis=0), fin[0,:] - fin[-1,:]))
@@ -217,15 +207,6 @@ def entropy(X):
     It converts the input image to uint8 format, computes pixel counts, normalizes them, and calculates entropy.
     
     """
-    # tmp = X * 255
-    # tmp[tmp > 255] = 255
-    # tmp[tmp<0] = 0
-    # tmp = tmp.astype(np.uint8)
-    # _, counts = np.unique(tmp, return_counts=True)
-    # pk = np.asarray(counts)
-    # pk = 1.0*pk / np.sum(pk, axis=0)
-    # S = -np.sum(pk * np.log2(pk), axis=0)
-    # return S
     
     try:
         # Compute pixel counts
@@ -263,32 +244,6 @@ def maxEntropyEnhance(I, isBad, a=-0.3293, b=1.1258):
     Applies the camera model to enhance the input image and returns the enhanced image
     
     """
-    # # Esatimate k
-    # tmp = cv2.resize(I, (50,50), interpolation=cv2.INTER_AREA)
-    # tmp[tmp<0] = 0
-    # tmp = tmp.real
-    # Y = rgb2gm(tmp)
-    
-    # isBad = isBad * 1
-    # isBad = np.array(Image.fromarray(isBad).resize((50,50), Image.BICUBIC))
-    
-    # isBad[isBad<0.5] = 0
-    # isBad[isBad>=0.5] = 1
-    # Y = Y[isBad==1]
-    
-    # if Y.size == 0:
-    #    J = I
-    #    return J
-    
-    # # Define the objective function for optimization
-    # f = lambda k: -entropy(applyK(Y, k))
-    # # Find the exposure ratio (k) that maximizes entropy
-    # opt_k = scipy.optimize.fminbound(f, 1, 7)
-    
-    # # # Apply the exposure adjustment based on the optimized k
-    # J = applyK(I, opt_k, a, b) - 0.01
-    # return J
-    
     try:
         def entropy_neg(k):
             """
