@@ -17,7 +17,7 @@ Python implementations of "[Color Cast Removal for Image Restoration in Low Ligh
 ### Usage
 If you want the result of "[Our Image Contrast Enhancement Algorithm Using Exposure Fusion Framework]"
 ```
-python ying.py <input image> 
+python fusion.py <input image> 
 ```
 If you want the result of "[A Dynamic Histogram Equalization for Image Contrast Enhancement](https://ieeexplore.ieee.org/document/4266947/)"
 ```
