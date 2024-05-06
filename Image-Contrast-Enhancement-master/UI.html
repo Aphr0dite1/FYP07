@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Enhancement</title>
+</head>
+<body>
+    <h1>Image Enhancement</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="uploadImage()">Enhance Image</button>
+    <div id="resultContainer"></div>
+
+    <script>
+        function uploadImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select an image file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(blob => {
+                const imageUrl = URL.createObjectURL(blob);
+                const resultContainer = document.getElementById('resultContainer');
+                resultContainer.innerHTML = `<h2>Enhanced Image</h2><img src="${imageUrl}" alt="Enhanced Image">`;
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+                alert('Error occurred during image enhancement.');
+            });
+        }
+    </script>
+</body>
+</html>
