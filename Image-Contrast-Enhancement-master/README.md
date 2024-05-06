@@ -30,8 +30,8 @@ python he.py <input image>
 
 ### Results
 <p align='center'>
-  <img src='low/01.png' height='256' width='192'/>
-  <img src='result/fusion_low_result/01.png' height='256' width='192'/>
+  <img src='low/1.png' height='256' width='192'/>
+  <img src='result/fusion_low_result/1.png' height='256' width='192'/>
   <img src='low/780.png' height='256' width='192'/>
   <img src='result/fusion_low_result/780.png' height='256' width='192'/>
 </p>
