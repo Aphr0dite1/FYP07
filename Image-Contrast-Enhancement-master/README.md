@@ -1,10 +1,10 @@
 # Image-Contrast-Enhancement
-Python implementations of "[A New Image Contrast Enhancement Algorithm Using Exposure Fusion Framework](https://baidut.github.io/OpenCE/caip2017.html)"
+Python implementations of "[Color Cast Removal for Image Restoration in Low Light / Night Time Conditions with Model-Based Learning]"
 
 ### Already Implemented
 - histogram equalization(he)
 - dynamic histogram equalization(dhe)
-- A New Image Contrast Enhancement Algorithm Using Exposure Fusion Framework
+- Our Image Contrast Enhancement Algorithm Using Exposure Fusion Framework
 
 ### Requirements
 - scipy
@@ -15,7 +15,7 @@ Python implementations of "[A New Image Contrast Enhancement Algorithm Using Exp
 - skimage
 
 ### Usage
-If you want the result of "[A New Image Contrast Enhancement Algorithm Using Exposure Fusion Framework](https://baidut.github.io/OpenCE/caip2017.html)"
+If you want the result of "[Our Image Contrast Enhancement Algorithm Using Exposure Fusion Framework]"
 ```
 python ying.py <input image>
 ```
@@ -30,18 +30,18 @@ python he.py <input image>
 
 ### Results
 <p align='center'>
-  <img src='testdata/01.jpg' height='256' width='192'/>
-  <img src='result/ying/01.jpg' height='256' width='192'/>
-  <img src='testdata/03.jpg' height='256' width='192'/>
-  <img src='result/ying/03.jpg' height='256' width='192'/>
+  <img src='low/01.png' height='256' width='192'/>
+  <img src='fusion_low_result/01.png' height='256' width='192'/>
+  <img src='low/780.png' height='256' width='192'/>
+  <img src='fusion_low_result/780.png' height='256' width='192'/>
 </p>
 
 <p align='center'>
-  <img src='testdata/02.jpg' height='252' width='384'/>
-  <img src='result/ying/02.jpg' height='252' width='384'/>
+  <img src='low/708.png' height='252' width='384'/>
+  <img src='fusion_low_result/708.png' height='252' width='384'/>
 </p>
 
 <p align='center'>
-  <img src='testdata/04.jpg' height='252' width='384'/>
-  <img src='result/ying/04.jpg' height='252' width='384'/>
+  <img src='low/669.png' height='252' width='384'/>
+  <img src='fusion_low_result/669.png' height='252' width='384'/>
 </p>
