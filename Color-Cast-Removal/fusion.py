@@ -296,8 +296,10 @@ def mds07_fusion(img, mu=0.5):
     This function, MDS07, performs the main processing steps:
         - It initializes parameters such as lambda and sigma.
         - It normalizes the input image img.
-        - It estimates a weight matrix (t_our) based on the maximum intensity of the input image (t_b) and applies texture smoothing (tsmooth) to it.
-        - It identifies "bad" pixels in the smoothed image and enhances the input image using the maxEntropyEnhance function.
+        - It estimates a weight matrix (t_our) based on the maximum intensity of the input image 
+            (t_b) and applies texture smoothing (tsmooth) to it.
+        - It identifies "bad" pixels in the smoothed image and enhances the input image 
+            using the maxEntropyEnhance function.
         - It constructs a weight matrix W based on the smoothed image.
         - It fuses the input image I and enhanced image J based on the constructed weights.
         - It adjusts the intensity range of the fused image and returns the result.
